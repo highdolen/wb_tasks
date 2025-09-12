@@ -1,0 +1,23 @@
+package main
+
+import "fmt"
+
+func setBit(n int64, i uint, value int) int64 {
+	if value == 1 {
+		n |= 1 << i
+	} else {
+		n &^= 1 << i
+	}
+	return n
+}
+
+func main() {
+	var num int64 = 5
+	fmt.Printf("Число в десятичном виде:%v, число в двоичном виде:%04b\n", num, num)
+	num = setBit(num, 0, 0) // ставим первый бит в 0
+	fmt.Printf("После установки 1ого бита в 0: %v(в двоичном виде %04b)\n", num, num)
+	num = setBit(num, 1, 1) // ставим второй бит в 1
+	fmt.Printf("После установки 2ого бита в 1: %v(в двоичном виде %04b)\n", num, num)
+	num = setBit(num, 2, 0) // ставим третий бит в 0
+	fmt.Printf("После установки 3ьего бита в 0: %v(в двоичном виде %04b)\n", num, num)
+}
