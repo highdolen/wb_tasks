@@ -75,7 +75,7 @@ func worker(ctx context.Context, jobs <-chan int, id int) {
 			if !ok {
 				return
 			}
-			//пишем, что воркер обработал какое либо число
+			//пишем, что воркер обработал число
 			fmt.Printf("Worker %v - %v\n", id, job)
 		}
 	}
