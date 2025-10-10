@@ -6,63 +6,58 @@ import (
 	"strings"
 )
 
-// Тип для сортировки рун
-type runeSlice []rune
+// SetAnagram группирует слова по множествам анаграмм
+func SetAnagram(words []string) map[string][]string {
+	groups := make(map[string][]string)
+	seen := make(map[string]bool) // для удаления дубликатов
 
-func (r runeSlice) Len() int           { return len(r) }
-func (r runeSlice) Less(i, j int) bool { return r[i] < r[j] }
-func (r runeSlice) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
-
-// Функция для сортировки букв в слове
-func sortRunes(s string) string {
-	runes := runeSlice([]rune(s))
-	sort.Sort(runes)
-	return string(runes)
-}
-
-// Функция для поиска множеств анаграмм
-func FindAnagramSets(words []string) map[string][]string {
-	anagramGroups := make(map[string][]string)
-
-	// Приводим все слова к нижнему регистру и группируем по "сигнатуре" (отсортированные буквы)
+	//проходимся по словам
 	for _, word := range words {
-		word = strings.ToLower(word)
-		sig := sortRunes(word)
-		anagramGroups[sig] = append(anagramGroups[sig], word)
+		//приводим слово к нижнему регистру
+		w := strings.ToLower(word)
+		// если слово уже есть в мапе, тогда переходим к следующему слову
+		if seen[w] {
+			continue
+		}
+		//добавляем в мапу для проверки дубликатов
+		seen[w] = true
+
+		// Разделяем слово на буквы для сортировки этих букв
+		letters := strings.Split(w, "")
+		//сортируем буквы
+		sort.Strings(letters)
+		//объединяем отсортированные буквы и приравниаем к ключу
+		key := strings.Join(letters, "")
+
+		//добавляем слова в мапу по ключу(сортированные буквы), добавляются слова
+		groups[key] = append(groups[key], w)
 	}
 
+	// Формируем финальную map
 	result := make(map[string][]string)
-
-	for _, group := range anagramGroups {
-		if len(group) > 1 { // Игнорируем одиночные слова
-			// Убираем дубликаты
-			unique := make(map[string]struct{})
-			for _, w := range group {
-				unique[w] = struct{}{}
-			}
-
-			cleanGroup := make([]string, 0, len(unique))
-			for w := range unique {
-				cleanGroup = append(cleanGroup, w)
-			}
-
-			// Сортируем по алфавиту
-			sort.Strings(cleanGroup)
-
-			// Ключом делаем первое слово в отсортированном списке
-			result[cleanGroup[0]] = cleanGroup
+	//проходимся по мапе
+	for _, group := range groups {
+		//если длина слайса значений больше одного(т.к. если меньше означает, что слово не имеет анаграммы)
+		//тогда сортируем слайс слов и берем первое из слов как ключ к результируюзей мапе
+		if len(group) > 1 {
+			//сортируем слайс слов
+			sort.Strings(group)
+			// ключ — первое слово из исходного списка (до сортировки)
+			result[group[0]] = group
 		}
 	}
-
+	//возвращаем результирующую мапу
 	return result
 }
 
 func main() {
+	//создаем слайс слов
 	words := []string{"пятак", "пятка", "тяпка", "листок", "слиток", "столик", "стол"}
+	//результат равен возвращаемой мапе из функции
+	res := SetAnagram(words)
 
-	anagramSets := FindAnagramSets(words)
-
-	for k, v := range anagramSets {
-		fmt.Printf("%s: %v\n", k, v)
+	//проходимся по мапе и выводим результаты
+	for key, group := range res {
+		fmt.Printf("%s: %v\n", key, group)
 	}
 }
