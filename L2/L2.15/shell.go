@@ -25,21 +25,78 @@ func NewShell(output io.Writer) *Shell {
 
 // ExecuteLine - метод, который выполняет команду
 func (s *Shell) ExecuteLine(line string) error {
-	//делим команды по пайплайну
+	line = strings.TrimSpace(line)
+
+	//добавляем поддержку && и ||
+	tokens := splitByLogicalOperators(line)
+	if len(tokens) > 1 {
+		return s.executeLogical(tokens)
+	}
+
+	//логика пайплайнов
 	commands := strings.Split(line, "|")
-	//проходимся по командам по очереди
 	for i := range commands {
-		//удаляем лишние пробелы у каждой из команд
 		commands[i] = strings.TrimSpace(commands[i])
 	}
 
-	//если поступила всего 1 команда, тогда выполняем ее и возвращаем результат
 	if len(commands) == 1 {
 		return s.ExecuteSingleCommand(commands[0])
 	}
-
-	// Используем исправленную версию пайпов
 	return s.ExecutePipeline(commands)
+}
+
+// Разбивает строку на команды с учетом && и ||
+func splitByLogicalOperators(line string) []string {
+	// делаем простейший парсинг
+	line = strings.ReplaceAll(line, "&&", " && ")
+	line = strings.ReplaceAll(line, "||", " || ")
+	return strings.Fields(line)
+}
+
+// выполняет команды по && и ||
+func (s *Shell) executeLogical(tokens []string) error {
+	var lastErr error       // последняя возвращённая ошибка (результат последней выполненной команды)
+	expectCmd := true       // флаг: ожидаем ли сейчас команду (true значит: перед последним оператором)
+	var op string           // последний увиденный логический оператор ("&&" или "||"), применяется к следующей команде
+	var cmdBuilder []string // накопитель токенов для текущей команды
+
+	runCmd := func() error {
+		if len(cmdBuilder) == 0 {
+			return nil
+		}
+		cmd := strings.Join(cmdBuilder, " ")
+		cmdBuilder = nil
+		return s.ExecuteLine(cmd) // рекурсивно выполняем
+	}
+
+	for _, tok := range tokens {
+		switch tok {
+		case "&&", "||":
+			if expectCmd {
+				return fmt.Errorf("syntax error near '%s'", tok)
+			}
+			// Выполнить накопленную команду
+			err := runCmd()
+			lastErr = err
+			expectCmd = true
+			op = tok
+		default:
+			cmdBuilder = append(cmdBuilder, tok)
+			expectCmd = false
+		}
+	}
+
+	// выполняем последнюю команду
+	if len(cmdBuilder) > 0 {
+		if op == "&&" && lastErr != nil {
+			return nil // предыдущая упала → пропускаем
+		}
+		if op == "||" && lastErr == nil {
+			return nil // предыдущая прошла → пропускаем
+		}
+		return runCmd()
+	}
+	return lastErr
 }
 
 // Выполнение одиночной команды (встроенной или внешней)

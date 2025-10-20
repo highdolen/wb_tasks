@@ -11,6 +11,7 @@ import (
 // Выполняет пайплайн команд (упрощенная версия)
 func (s *Shell) ExecutePipeline(cmdLines []string) error {
 	n := len(cmdLines)
+	//если не пришло никаких команд, тогда возвращаем ошибку
 	if n == 0 {
 		return fmt.Errorf("empty pipeline")
 	}
@@ -18,8 +19,10 @@ func (s *Shell) ExecutePipeline(cmdLines []string) error {
 	// Запускаем команды последовательно, соединяя пайпами
 	var prevOutput io.Reader = os.Stdin
 
+	//проходимся по командам
 	for i, line := range cmdLines {
 		args := strings.Fields(line)
+		//если аргументов нет, значит возвращаем ошибку
 		if len(args) == 0 {
 			return fmt.Errorf("empty command in pipeline")
 		}
