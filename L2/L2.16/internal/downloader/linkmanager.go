@@ -87,7 +87,7 @@ func (lm *LinkManager) ToLocalPath(raw string) string {
 	full = path.Clean(full)
 	// удалить ведущий "./" если он есть
 	full = strings.TrimPrefix(full, "./")
-	// финальная санитаризация: заменить любые неподходящие символы
+	// заменить любые неподходящие символы
 	full = lm.safeRe.ReplaceAllString(full, "_")
 
 	return full
