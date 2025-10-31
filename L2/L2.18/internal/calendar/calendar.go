@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"calendar-app/internal/models"
+	"secondBlock/L2.18/internal/models"
 )
 
 var (

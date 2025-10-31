@@ -3,34 +3,35 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Server ServerConfig
-}
-
-type ServerConfig struct {
-	Port string
-}
-
-func (c *Config) Validate() error {
-	if c.Server.Port == "" {
-		return fmt.Errorf("server port is missing")
-	}
-	return nil
+	Port int
 }
 
 func LoadConfig() (*Config, error) {
-	port := os.Getenv("CALENDAR_PORT")
-	if port == "" {
-		port = "8080" // дефолтный порт
+	// Загружаем .env файл (игнорируем ошибку, если файла нет)
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("DEBUG: .env file not found in root directory, using environment variables")
 	}
 
-	cfg := &Config{
-		Server: ServerConfig{
-			Port: port,
-		},
+	portStr := os.Getenv("CALENDAR_PORT")
+
+	// Если порт не установлен, используем значение по умолчанию
+	if portStr == "" {
+		portStr = "8080"
+		fmt.Println("DEBUG: Using default port 8080")
 	}
 
-	return cfg, nil
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid port: %v", err)
+	}
+
+	return &Config{
+		Port: port,
+	}, nil
 }

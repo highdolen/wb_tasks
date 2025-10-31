@@ -1,38 +1,28 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
+	"secondBlock/L2.18/internal/calendar"
 	"secondBlock/L2.18/internal/config"
+	"secondBlock/L2.18/internal/handlers"
 )
 
 func main() {
-	ctx := context.Background()
-
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Ошибка в загрузке конфига: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	if err := cfg.Validate(); err != nil {
-		log.Fatalf("Ошибка валидации конфига: %v", err)
-	}
+	cal := calendar.New()
+	h := handlers.NewHandlers(cal)
+	router := h.SetupRoutes()
 
-	// Для примера — просто заглушка
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "OK")
-	})
+	// Add logging middleware
+	routerWithMiddleware := handlers.LoggingMiddleware(router) // ← теперь работает!
 
-	serverAddr := ":" + cfg.Server.Port
-	log.Printf("Сервер запущен на %s", serverAddr)
-
-	if err := http.ListenAndServe(serverAddr, mux); err != nil {
-		log.Fatalf("Ошибка при запуске сервера: %v", err)
-	}
-
-	<-ctx.Done()
+	log.Printf("Server starting on port %d", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(cfg.Port), routerWithMiddleware))
 }
