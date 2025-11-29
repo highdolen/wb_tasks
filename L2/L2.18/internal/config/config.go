@@ -26,6 +26,7 @@ func LoadConfig() (*Config, error) {
 		fmt.Println("DEBUG: Using default port 8080")
 	}
 
+	// Конвертируем порт в int
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid port: %v", err)

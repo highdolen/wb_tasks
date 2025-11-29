@@ -28,7 +28,10 @@ func TestCalendar_CreateAndGetEvents(t *testing.T) {
 
 func TestCalendar_UpdateEvent(t *testing.T) {
 	cal := New()
-	ev, _ := cal.CreateEvent(1, "2024-01-01", "Old Title")
+	ev, err := cal.CreateEvent(1, "2024-01-01", "Old Title")
+	if err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
 
 	updated, err := cal.UpdateEvent(ev.ID, 1, "2024-01-02", "New Title")
 	if err != nil {
@@ -42,9 +45,12 @@ func TestCalendar_UpdateEvent(t *testing.T) {
 
 func TestCalendar_DeleteEvent(t *testing.T) {
 	cal := New()
-	ev, _ := cal.CreateEvent(1, "2024-01-01", "To delete")
+	ev, err := cal.CreateEvent(1, "2024-01-01", "To delete")
+	if err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
 
-	err := cal.DeleteEvent(ev.ID, 1)
+	err = cal.DeleteEvent(ev.ID, 1)
 	if err != nil {
 		t.Fatalf("DeleteEvent failed: %v", err)
 	}
@@ -59,10 +65,18 @@ func TestCalendar_GetEventsForWeek(t *testing.T) {
 	cal := New()
 
 	// События вокруг Нового года, ISO-недели пересекаются
-	cal.CreateEvent(1, "2023-12-31", "Event 1") // неделя 52
-	cal.CreateEvent(1, "2024-01-01", "Event 2") // неделя 1
-	cal.CreateEvent(1, "2024-01-07", "Event 3") // неделя 1
-	cal.CreateEvent(1, "2024-01-08", "Event 4") // неделя 2
+	if _, err := cal.CreateEvent(1, "2023-12-31", "Event 1"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
+	if _, err := cal.CreateEvent(1, "2024-01-01", "Event 2"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
+	if _, err := cal.CreateEvent(1, "2024-01-07", "Event 3"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
+	if _, err := cal.CreateEvent(1, "2024-01-08", "Event 4"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
 
 	events, err := cal.GetEventsForWeek(1, "2024-01-01")
 	if err != nil {
@@ -77,9 +91,15 @@ func TestCalendar_GetEventsForWeek(t *testing.T) {
 func TestCalendar_GetEventsForMonth(t *testing.T) {
 	cal := New()
 
-	cal.CreateEvent(1, "2024-01-05", "Event 1")
-	cal.CreateEvent(1, "2024-01-20", "Event 2")
-	cal.CreateEvent(1, "2024-02-01", "Event 3")
+	if _, err := cal.CreateEvent(1, "2024-01-05", "Event 1"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
+	if _, err := cal.CreateEvent(1, "2024-01-20", "Event 2"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
+	if _, err := cal.CreateEvent(1, "2024-02-01", "Event 3"); err != nil {
+		t.Fatalf("CreateEvent failed: %v", err)
+	}
 
 	events, err := cal.GetEventsForMonth(1, "2024-01-10")
 	if err != nil {

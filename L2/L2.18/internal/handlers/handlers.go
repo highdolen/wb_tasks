@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"secondBlock/L2.18/internal/calendar"
 	"secondBlock/L2.18/internal/models"
@@ -11,20 +14,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Handlers предоставляет HTTP-обработчики для календаря.
 type Handlers struct {
 	calendar *calendar.Calendar
 }
 
+// NewHandlers - конструктор для Handlers.
 func NewHandlers(cal *calendar.Calendar) *Handlers {
 	return &Handlers{
 		calendar: cal,
 	}
 }
 
+// CreateEvent - хэндлер для создания события.
 func (h *Handlers) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateEventRequest
-	if err := decodeRequest(r, &req); err != nil {
-		sendError(w, "invalid request body", http.StatusBadRequest)
+
+	if err := decodeRequest(w, r, &req); err != nil {
+		sendError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -35,21 +42,23 @@ func (h *Handlers) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := h.calendar.CreateEvent(req.UserID, req.Date, req.Title)
 	if err != nil {
-		status := http.StatusBadRequest
-		if err == calendar.ErrInvalidDate {
-			status = http.StatusBadRequest
+		switch {
+		case errors.Is(err, calendar.ErrInvalidDate):
+			sendError(w, err.Error(), http.StatusBadRequest)
+		default:
+			sendError(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		sendError(w, err.Error(), status)
 		return
 	}
 
 	sendSuccess(w, "event created with id: "+strconv.Itoa(event.ID))
 }
 
+// UpdateEvent - хэндлер для обновления события.
 func (h *Handlers) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	var req models.UpdateEventRequest
-	if err := decodeRequest(r, &req); err != nil {
-		sendError(w, "invalid request body", http.StatusBadRequest)
+	if err := decodeRequest(w, r, &req); err != nil {
+		sendError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -60,23 +69,25 @@ func (h *Handlers) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := h.calendar.UpdateEvent(req.ID, req.UserID, req.Date, req.Title)
 	if err != nil {
-		status := http.StatusBadRequest
-		if err == calendar.ErrEventNotFound {
-			status = http.StatusServiceUnavailable
-		} else if err == calendar.ErrInvalidDate {
-			status = http.StatusBadRequest
+		switch {
+		case errors.Is(err, calendar.ErrInvalidDate):
+			sendError(w, err.Error(), http.StatusBadRequest)
+		case errors.Is(err, calendar.ErrEventNotFound):
+			sendError(w, err.Error(), http.StatusNotFound)
+		default:
+			sendError(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		sendError(w, err.Error(), status)
 		return
 	}
 
 	sendSuccess(w, "event updated: "+strconv.Itoa(event.ID))
 }
 
+// DeleteEvent - хэндлер для удаления события.
 func (h *Handlers) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	var req models.DeleteEventRequest
-	if err := decodeRequest(r, &req); err != nil {
-		sendError(w, "invalid request body", http.StatusBadRequest)
+	if err := decodeRequest(w, r, &req); err != nil {
+		sendError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -85,19 +96,19 @@ func (h *Handlers) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.calendar.DeleteEvent(req.ID, req.UserID)
-	if err != nil {
-		status := http.StatusBadRequest
-		if err == calendar.ErrEventNotFound {
-			status = http.StatusServiceUnavailable
+	if err := h.calendar.DeleteEvent(req.ID, req.UserID); err != nil {
+		if errors.Is(err, calendar.ErrEventNotFound) {
+			sendError(w, err.Error(), http.StatusNotFound)
+			return
 		}
-		sendError(w, err.Error(), status)
+		sendError(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	sendSuccess(w, "event deleted")
 }
 
+// EventsForDay - возвращает события за день.
 func (h *Handlers) EventsForDay(w http.ResponseWriter, r *http.Request) {
 	userID, date, err := parseQueryParams(r)
 	if err != nil {
@@ -107,13 +118,18 @@ func (h *Handlers) EventsForDay(w http.ResponseWriter, r *http.Request) {
 
 	events, err := h.calendar.GetEventsForDay(userID, date)
 	if err != nil {
-		sendError(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, calendar.ErrInvalidDate) {
+			sendError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sendError(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	sendJSON(w, models.EventsResponse{Result: events})
 }
 
+// EventsForWeek - возвращает события за неделю.
 func (h *Handlers) EventsForWeek(w http.ResponseWriter, r *http.Request) {
 	userID, date, err := parseQueryParams(r)
 	if err != nil {
@@ -123,13 +139,18 @@ func (h *Handlers) EventsForWeek(w http.ResponseWriter, r *http.Request) {
 
 	events, err := h.calendar.GetEventsForWeek(userID, date)
 	if err != nil {
-		sendError(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, calendar.ErrInvalidDate) {
+			sendError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sendError(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	sendJSON(w, models.EventsResponse{Result: events})
 }
 
+// EventsForMonth - возвращает события за месяц.
 func (h *Handlers) EventsForMonth(w http.ResponseWriter, r *http.Request) {
 	userID, date, err := parseQueryParams(r)
 	if err != nil {
@@ -139,52 +160,56 @@ func (h *Handlers) EventsForMonth(w http.ResponseWriter, r *http.Request) {
 
 	events, err := h.calendar.GetEventsForMonth(userID, date)
 	if err != nil {
-		sendError(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, calendar.ErrInvalidDate) {
+			sendError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sendError(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	sendJSON(w, models.EventsResponse{Result: events})
 }
 
-func decodeRequest(r *http.Request, v interface{}) error {
+// decodeRequest читает тело запроса в структуру v.
+// Поддерживает JSON и form-urlencoded.
+// Ограничивает размер тела и корректно закрывает body.
+func decodeRequest(w http.ResponseWriter, r *http.Request, v interface{}) error {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	contentType := r.Header.Get("Content-Type")
 
-	if contentType == "application/json" {
-		return json.NewDecoder(r.Body).Decode(v)
+	if strings.HasPrefix(contentType, "application/json") {
+		defer func() {
+			_, _ = io.Copy(io.Discard, r.Body)
+			_ = r.Body.Close()
+		}()
+
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		return dec.Decode(v)
 	}
 
-	// Default to form data
+	// form-urlencoded
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
 
-	// Simple form to struct mapping
-	if req, ok := v.(*models.CreateEventRequest); ok {
-		if idStr := r.FormValue("user_id"); idStr != "" {
-			req.UserID, _ = strconv.Atoi(idStr)
-		}
+	// Маппинг form → структура
+	switch req := v.(type) {
+	case *models.CreateEventRequest:
+		req.UserID, _ = strconv.Atoi(r.FormValue("user_id"))
 		req.Date = r.FormValue("date")
 		req.Title = r.FormValue("event")
-	}
 
-	if req, ok := v.(*models.UpdateEventRequest); ok {
-		if idStr := r.FormValue("id"); idStr != "" {
-			req.ID, _ = strconv.Atoi(idStr)
-		}
-		if idStr := r.FormValue("user_id"); idStr != "" {
-			req.UserID, _ = strconv.Atoi(idStr)
-		}
+	case *models.UpdateEventRequest:
+		req.ID, _ = strconv.Atoi(r.FormValue("id"))
+		req.UserID, _ = strconv.Atoi(r.FormValue("user_id"))
 		req.Date = r.FormValue("date")
 		req.Title = r.FormValue("event")
-	}
 
-	if req, ok := v.(*models.DeleteEventRequest); ok {
-		if idStr := r.FormValue("id"); idStr != "" {
-			req.ID, _ = strconv.Atoi(idStr)
-		}
-		if idStr := r.FormValue("user_id"); idStr != "" {
-			req.UserID, _ = strconv.Atoi(idStr)
-		}
+	case *models.DeleteEventRequest:
+		req.ID, _ = strconv.Atoi(r.FormValue("id"))
+		req.UserID, _ = strconv.Atoi(r.FormValue("user_id"))
 	}
 
 	return nil
@@ -194,13 +219,16 @@ func parseQueryParams(r *http.Request) (int, string, error) {
 	userIDStr := r.URL.Query().Get("user_id")
 	date := r.URL.Query().Get("date")
 
-	if userIDStr == "" || date == "" {
-		return 0, "", calendar.ErrInvalidDate
+	if userIDStr == "" {
+		return 0, "", errors.New("missing user_id")
+	}
+	if date == "" {
+		return 0, "", errors.New("missing date")
 	}
 
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		return 0, "", calendar.ErrInvalidDate
+		return 0, "", errors.New("invalid user_id")
 	}
 
 	return userID, date, nil
@@ -208,7 +236,9 @@ func parseQueryParams(r *http.Request) (int, string, error) {
 
 func sendJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, "failed to encode response: "+err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func sendSuccess(w http.ResponseWriter, message string) {
@@ -218,9 +248,10 @@ func sendSuccess(w http.ResponseWriter, message string) {
 func sendError(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(models.ErrorResponse{Error: message})
+	_ = json.NewEncoder(w).Encode(models.ErrorResponse{Error: message})
 }
 
+// SetupRoutes регистрирует маршруты.
 func (h *Handlers) SetupRoutes() *mux.Router {
 	router := mux.NewRouter()
 
