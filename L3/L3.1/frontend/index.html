@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Delayed Notifier</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>Delayed Notifier</h1>
+
+<section>
+    <h2>Создать уведомление</h2>
+
+    <label>Канал:</label>
+    <select id="channel">
+        <option value="email">Email</option>
+        <option value="telegram">Telegram</option>
+    </select>
+
+    <label>Получатель:</label>
+    <input id="recipient" placeholder="email или chat_id">
+
+    <label>Тема:</label>
+    <input id="subject">
+
+    <label>Сообщение:</label>
+    <textarea id="message"></textarea>
+
+    <label>Дата и время:</label>
+    <input type="datetime-local" id="sendAt">
+
+    <button onclick="createNotification()">Создать уведомление</button>
+</section>
+
+<hr>
+
+<section>
+    <h2>Проверить статус уведомления</h2>
+    <input id="notificationId" placeholder="Notification ID">
+    <button onclick="getStatus()">Проверить</button>
+    <pre id="statusResult"></pre>
+</section>
+
+<hr>
+
+<section>
+    <h2>Отменить уведомление</h2>
+    <input id="deleteId" placeholder="Notification ID">
+    <button onclick="deleteNotification()">Отменить</button>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

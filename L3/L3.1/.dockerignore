@@ -1,0 +1,9 @@
+.git
+.gitignore
+.env
+*.log
+*.out
+*.exe
+tmp/
+build/
+dist/
