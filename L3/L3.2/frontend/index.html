@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shortener</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+
+        <!-- Форма создания короткой ссылки -->
+        <div class="card">
+            <h2>Create Short Link</h2>
+            <input type="text" id="originalUrl" placeholder="Enter original URL">
+            <input type="text" id="customCode" placeholder="Custom code (optional)">
+            <button id="createBtn">Create</button>
+            <div id="result"></div>
+        </div>
+
+        <!-- Форма просмотра аналитики -->
+        <div class="card">
+            <h2>View Analytics</h2>
+            <input type="text" id="analyticsCode" placeholder="Enter short code">
+            <button id="analyticsBtn">Get Analytics</button>
+            <pre id="analyticsResult"></pre>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

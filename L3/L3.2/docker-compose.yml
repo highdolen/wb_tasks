@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: shortener_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: shortener_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shortener_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./config.yaml:/app/config.yaml
+
+volumes:
+  postgres_data:
