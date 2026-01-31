@@ -146,7 +146,7 @@ curl -v http://localhost:8080/analytics/abc123
 ]
 ```
 
-> ⚠️ Важно: указывать именно `short_code`, а не полный URL.
+> Важно: указывать именно `short_code`, а не полный URL.
 
 ---
 
