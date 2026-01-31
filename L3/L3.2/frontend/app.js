@@ -36,6 +36,7 @@ createBtn.addEventListener("click", async () => {
 
 analyticsBtn.addEventListener("click", async () => {
     const code = document.getElementById("analyticsCode").value.trim();
+    const group = document.getElementById("groupSelect").value;
     const analyticsDiv = document.getElementById("analyticsResult");
     analyticsDiv.textContent = "Loading...";
 
@@ -45,11 +46,17 @@ analyticsBtn.addEventListener("click", async () => {
     }
 
     try {
-        const res = await fetch(`http://localhost:8080/analytics/${encodeURIComponent(code)}`);
+        const res = await fetch(`http://localhost:8080/analytics/${encodeURIComponent(code)}?group=${group}`);
         const data = await res.json();
 
         if (res.ok) {
-            analyticsDiv.textContent = JSON.stringify(data, null, 2);
+            if (group === "all") {
+                // показываем все визиты без группировки
+                analyticsDiv.textContent = JSON.stringify(data, null, 2);
+            } else {
+                // показываем агрегированную статистику
+                analyticsDiv.textContent = JSON.stringify(data, null, 2);
+            }
         } else {
             analyticsDiv.textContent = data.error || "Error fetching analytics";
         }

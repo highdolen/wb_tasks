@@ -26,9 +26,9 @@ type Repository struct {
 }
 
 type VisitStats struct {
-	Date      time.Time `json:"date"`
-	UserAgent string    `json:"user_agent"`
-	Count     int       `json:"count"`
+	Period    *time.Time `json:"period,omitempty"`
+	UserAgent string     `json:"user_agent,omitempty"`
+	Count     int        `json:"count"`
 }
 
 func init() {
@@ -47,7 +47,7 @@ func New(
 	}
 }
 
-// CREATE SHORT LINK
+// CreateShortLink - создает короткую ссылку
 func (r *Repository) CreateShortLink(
 	ctx context.Context,
 	originalURL string,
@@ -80,7 +80,7 @@ func (r *Repository) CreateShortLink(
 	return code, nil
 }
 
-// GET ORIGINAL URL
+// GetOriginalURL - возвращает оригинальный URL
 func (r *Repository) GetOriginalURL(
 	ctx context.Context,
 	code string,
@@ -114,7 +114,7 @@ func (r *Repository) GetOriginalURL(
 	return original, nil
 }
 
-// SAVE VISIT (БЕЗ IP)
+// SaveVisit - сохраняет переход без IP
 func (r *Repository) SaveVisit(
 	ctx context.Context,
 	code string,
@@ -133,23 +133,53 @@ func (r *Repository) SaveVisit(
 	return err
 }
 
-// ANALYTICS
+// GetAnalytics - возвращает статистику с группировкой
 func (r *Repository) GetAnalytics(
 	ctx context.Context,
 	code string,
+	groupBy string,
 ) ([]VisitStats, error) {
 
-	query := `
-		SELECT
-			DATE(v.created_at) AS date,
-			v.user_agent,
-			COUNT(*)
-		FROM visits v
-		JOIN short_links s ON s.id = v.short_url_id
-		WHERE s.short_code = $1
-		GROUP BY DATE(v.created_at), v.user_agent
-		ORDER BY DATE(v.created_at) DESC
-	`
+	var query string
+
+	switch groupBy {
+	case "month":
+		query = `
+			SELECT DATE_TRUNC('month', v.created_at) AS period, COUNT(*)
+			FROM visits v
+			JOIN short_links s ON s.id = v.short_url_id
+			WHERE s.short_code = $1
+			GROUP BY DATE_TRUNC('month', v.created_at)
+			ORDER BY DATE_TRUNC('month', v.created_at) DESC
+		`
+	case "agent":
+		query = `
+			SELECT v.user_agent, COUNT(*)
+			FROM visits v
+			JOIN short_links s ON s.id = v.short_url_id
+			WHERE s.short_code = $1
+			GROUP BY v.user_agent
+			ORDER BY COUNT(*) DESC
+		`
+	case "all":
+		query = `
+			SELECT v.created_at, v.user_agent, COUNT(*)
+			FROM visits v
+			JOIN short_links s ON s.id = v.short_url_id
+			WHERE s.short_code = $1
+			GROUP BY v.created_at, v.user_agent
+			ORDER BY v.created_at DESC
+		`
+	default: // day
+		query = `
+			SELECT DATE(v.created_at) AS period, COUNT(*)
+			FROM visits v
+			JOIN short_links s ON s.id = v.short_url_id
+			WHERE s.short_code = $1
+			GROUP BY DATE(v.created_at)
+			ORDER BY DATE(v.created_at) DESC
+		`
+	}
 
 	rows, err := r.db.QueryContext(ctx, query, code)
 	if err != nil {
@@ -158,11 +188,29 @@ func (r *Repository) GetAnalytics(
 	defer rows.Close()
 
 	var stats []VisitStats
+
 	for rows.Next() {
 		var s VisitStats
-		if err := rows.Scan(&s.Date, &s.UserAgent, &s.Count); err != nil {
-			return nil, err
+
+		switch groupBy {
+		case "month", "day":
+			var period time.Time
+			if err := rows.Scan(&period, &s.Count); err != nil {
+				return nil, err
+			}
+			s.Period = &period
+		case "agent":
+			if err := rows.Scan(&s.UserAgent, &s.Count); err != nil {
+				return nil, err
+			}
+		case "all":
+			var period time.Time
+			if err := rows.Scan(&period, &s.UserAgent, &s.Count); err != nil {
+				return nil, err
+			}
+			s.Period = &period
 		}
+
 		stats = append(stats, s)
 	}
 

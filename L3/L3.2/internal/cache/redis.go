@@ -7,7 +7,7 @@ import (
 	wbfredis "github.com/wb-go/wbf/redis"
 )
 
-// New инициализирует Redis через wbf-фреймворк
+// New инициализирует Redis
 func New(cfg *config.AppConfig) (*wbfredis.Client, error) {
 	if !cfg.Redis.Enabled {
 		return nil, nil

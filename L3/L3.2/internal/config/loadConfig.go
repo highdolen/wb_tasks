@@ -29,7 +29,7 @@ func LoadConfig(configFile string) (*AppConfig, error) {
 		return nil, err
 	}
 
-	// Гарантированно подтягиваем ENV для Postgres
+	// Подтягиваем .env для Postgres
 	if v := os.Getenv("POSTGRES_HOST"); v != "" {
 		appCfg.Postgres.Host = v
 	}
@@ -47,7 +47,7 @@ func LoadConfig(configFile string) (*AppConfig, error) {
 		appCfg.Postgres.DBName = v
 	}
 
-	// ENV для Redis
+	// .env для Redis
 	if v := os.Getenv("REDIS_ADDR"); v != "" {
 		appCfg.Redis.Addr = v
 	}

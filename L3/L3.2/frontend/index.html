@@ -22,6 +22,12 @@
         <div class="card">
             <h2>View Analytics</h2>
             <input type="text" id="analyticsCode" placeholder="Enter short code">
+            <select id="groupSelect">
+                <option value="day">By Day</option>
+                <option value="month">By Month</option>
+                <option value="agent">By User-Agent</option>
+                <option value="all">All</option>
+            </select>
             <button id="analyticsBtn">Get Analytics</button>
             <pre id="analyticsResult"></pre>
         </div>

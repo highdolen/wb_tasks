@@ -85,7 +85,7 @@ func (h *Handler) Redirect(c *ginext.Context) {
 		return
 	}
 
-	// аналитика (ошибка не ломает редирект)
+	// аналитика
 	userAgent := c.GetHeader("User-Agent")
 	_ = h.repo.SaveVisit(c.Request.Context(), code, userAgent)
 
@@ -95,16 +95,12 @@ func (h *Handler) Redirect(c *ginext.Context) {
 // GET /analytics/:code
 func (h *Handler) Analytics(c *ginext.Context) {
 	code := c.Param("code")
-	if code == "" {
-		c.JSON(http.StatusBadRequest, ginext.H{
-			"error": "code is required",
-		})
-		return
-	}
+	group := c.DefaultQuery("group", "day")
 
 	stats, err := h.repo.GetAnalytics(
 		c.Request.Context(),
 		code,
+		group,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ginext.H{
