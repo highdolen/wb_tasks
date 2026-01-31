@@ -1,0 +1,6 @@
+.env
+config.yaml
+
+docker-data/
+*.log
+
