@@ -1,11 +1,18 @@
+-- short_links
 CREATE TABLE IF NOT EXISTS short_links (
-    id SERIAL PRIMARY KEY,
-    short_code TEXT NOT NULL UNIQUE,
+    id BIGSERIAL PRIMARY KEY,
+    short_code VARCHAR(32) NOT NULL UNIQUE,
     original_url TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE INDEX IF NOT EXISTS idx_short_links_short_code
-    ON short_links(short_code);
+-- visits
+CREATE TABLE IF NOT EXISTS visits (
+    id BIGSERIAL PRIMARY KEY,
+    short_link_id BIGINT NOT NULL REFERENCES short_links(id) ON DELETE CASCADE,
+    user_agent TEXT,
+    ip_address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
