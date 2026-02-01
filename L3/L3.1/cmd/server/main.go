@@ -35,7 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to init RabbitMQ client: %v", err)
 	}
-	defer rabbitClient.Rmq.Close()
+	defer func() {
+		if err := rabbitClient.Rmq.Close(); err != nil {
+			log.Printf("failed to close RabbitMQ connection: %v", err)
+		}
+	}()
 
 	//Инициализация продюсера RabbitMQ
 	producer := rabbitmq.NewProducer(rabbitClient)

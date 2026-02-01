@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"delayed_notifier/internal/models"
@@ -18,7 +19,7 @@ func (t *TelegramSender) Send(n models.Notification) error {
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.BotToken)
 
 	payload := map[string]interface{}{
-		"chat_id": n.Recipient, // оставляем строку, Telegram API это понимает
+		"chat_id": n.Recipient, // оставляем строку
 		"text":    n.Message,
 	}
 
@@ -38,7 +39,11 @@ func (t *TelegramSender) Send(n models.Notification) error {
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("failed to close HTTP response body: %v", err)
+		}
+	}()
 
 	respBody, _ := io.ReadAll(resp.Body)
 

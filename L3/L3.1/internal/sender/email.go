@@ -3,6 +3,7 @@ package sender
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/smtp"
 
 	"delayed_notifier/internal/models"
@@ -12,8 +13,8 @@ import (
 type EmailSender struct {
 	Host     string
 	Port     int
-	Username string // email ОТ КОТОРОГО отправляем
-	Password string // app password
+	Username string // email от которого отправляем
+	Password string // пароль приложения
 }
 
 func NewEmailSender(host string, port int, username, password string) *EmailSender {
@@ -44,7 +45,11 @@ func (e *EmailSender) Send(n models.Notification) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Quit()
+	defer func() {
+		if err := conn.Quit(); err != nil {
+			log.Printf("failed to quit SMTP connection: %v", err)
+		}
+	}()
 
 	if ok, _ := conn.Extension("STARTTLS"); ok {
 		tlsConfig := &tls.Config{ServerName: e.Host}

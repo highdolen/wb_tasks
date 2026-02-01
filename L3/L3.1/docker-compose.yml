@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: notifier-l3.1
-    ports:  
+    ports:
       - "8080:8080"
     environment:
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
