@@ -1,0 +1,8 @@
+services:
+  comment-tree:
+    build: .
+    container_name: comment-tree
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.yaml:/app/config.yaml

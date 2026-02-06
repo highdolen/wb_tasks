@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Дерево комментариев</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Комментарии</h1>
+
+<div class="search">
+    <input type="text" id="searchInput" placeholder="Поиск...">
+    <button id="searchBtn">Найти</button>
+    <button id="resetBtn">Сбросить</button>
+</div>
+
+<div id="comments"></div>
+
+<div class="new-comment">
+    <textarea id="newText" placeholder="Ваш комментарий..."></textarea>
+    <button id="addRoot">Добавить</button>
+</div>
+
+<div class="pagination">
+    <button id="prevPage">Назад</button>
+    <span id="pageInfo">1</span>
+    <button id="nextPage">Вперед</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

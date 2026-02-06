@@ -1,0 +1,77 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    background-color: #f7f7f7;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.search {
+    margin-bottom: 20px;
+}
+
+#comments {
+    margin-top: 20px;
+}
+
+.comment {
+    border-left: 2px solid #ccc;
+    padding-left: 10px;
+    margin-top: 10px;
+    background-color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.comment .actions {
+    margin-top: 5px;
+}
+
+.comment .actions button {
+    margin-right: 5px;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+.comment .actions button:hover {
+    background-color: #eee;
+}
+
+textarea {
+    width: 300px;
+    height: 60px;
+    margin-bottom: 10px;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+button {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+button:hover {
+    background-color: #eee;
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin-right: 5px;
+}
+
+#comments div.comment {
+    transition: all 0.2s ease;
+}
