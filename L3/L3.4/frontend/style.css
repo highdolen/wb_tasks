@@ -1,0 +1,46 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.upload-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.images-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.image-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fafafa;
+    text-align: center;
+    width: 180px;
+}
+
+.image-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 6px 12px;
+    cursor: pointer;
+}
