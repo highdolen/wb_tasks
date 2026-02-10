@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"delayed_notifier/internal/config"
@@ -19,8 +23,6 @@ import (
 )
 
 func main() {
-
-	// Загрузка конфигурации
 	cfg, err := config.LoadConfig("config.yaml")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
@@ -30,23 +32,14 @@ func main() {
 		log.Fatalf("failed to validate config: %v", err)
 	}
 
-	// Инициализация клиента RabbitMQ
 	rabbitClient, err := rabbitmq.NewRabbitClient(*cfg)
 	if err != nil {
 		log.Fatalf("failed to init RabbitMQ client: %v", err)
 	}
-	defer func() {
-		if err := rabbitClient.Rmq.Close(); err != nil {
-			log.Printf("failed to close RabbitMQ connection: %v", err)
-		}
-	}()
 
-	//Инициализация продюсера RabbitMQ
 	producer := rabbitmq.NewProducer(rabbitClient)
 
-	// Хранилище уведомлений
 	var store storage.NotificationStorage
-
 	if cfg.Redis.URL != "" {
 		redisClient := wbfredis.New(cfg.Redis.URL, "", 0)
 		store = storage.NewRedisStorage(redisClient, 24*time.Hour)
@@ -56,7 +49,6 @@ func main() {
 		log.Println("In-memory storage enabled")
 	}
 
-	// Senders
 	emailSender := sender.NewEmailSender(
 		cfg.SMTP.Host,
 		cfg.SMTP.Port,
@@ -68,8 +60,9 @@ func main() {
 		BotToken: cfg.Telegram.Token,
 	}
 
-	// Consumer
-	ctx := context.Background()
+	// Контекст для graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	consumer := rabbitmq.NewNotificationConsumer(
 		rabbitClient.Rmq,
@@ -80,13 +73,12 @@ func main() {
 
 	go func() {
 		if err := consumer.Start(ctx); err != nil {
-			log.Fatalf("consumer failed: %v", err)
+			log.Printf("consumer stopped: %v", err)
 		}
 	}()
 
 	// HTTP server
 	h := handlers.NewNotificationHandlers(store, producer)
-
 	r := ginext.New("debug")
 
 	r.Use(
@@ -100,22 +92,48 @@ func main() {
 		}),
 	)
 
-	// Главная страница
 	r.GET("/", func(c *gin.Context) {
 		c.File("./frontend/index.html")
 	})
-
-	// CSS + JS
 	r.Static("/frontend", "./frontend")
-
-	// API
 	handlers.RegisterRoutes(r, h)
 
-	// Запуск сервера
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	log.Printf("server started at %s", addr)
 
-	if err := r.Run(addr); err != nil {
-		log.Fatal(err)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	// Запуск HTTP сервера в горутине
+	go func() {
+		log.Printf("server started at %s", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// Gracegul shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutdown signal received")
+
+	// Останавливаем consumer через контекст
+	cancel()
+
+	// Даем HTTP серверу время корректно завершить соединения
+	ctxTimeout, cancelTimeout := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelTimeout()
+
+	if err := srv.Shutdown(ctxTimeout); err != nil {
+		log.Printf("server shutdown failed: %v", err)
+	}
+
+	// Закрываем RabbitMQ соединение
+	if err := rabbitClient.Rmq.Close(); err != nil {
+		log.Printf("failed to close RabbitMQ: %v", err)
+	}
+
+	log.Println("graceful shutdown completed")
 }
