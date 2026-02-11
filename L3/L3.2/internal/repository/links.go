@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"math/rand"
 	"time"
 
@@ -29,10 +30,6 @@ type VisitStats struct {
 	Period    *time.Time `json:"period,omitempty"`
 	UserAgent string     `json:"user_agent,omitempty"`
 	Count     int        `json:"count"`
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func New(
@@ -185,7 +182,11 @@ func (r *Repository) GetAnalytics(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var stats []VisitStats
 
@@ -217,11 +218,13 @@ func (r *Repository) GetAnalytics(
 	return stats, nil
 }
 
+var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 func generateRandomCode(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rnd.Intn(len(letters))]
 	}
 	return string(b)
 }

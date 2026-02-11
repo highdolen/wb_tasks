@@ -1,6 +1,18 @@
-.env
+# Секреты и конфигурации
 config.yaml
+.env
+.env.*
 
-docker-data/
+# Логи (могут появляться при запуске приложения)
 *.log
 
+# Локальные бинарники
+notifier
+
+# IDE
+.idea/
+.vscode/
+
+# Системные файлы ОС
+.DS_Store
+Thumbs.db

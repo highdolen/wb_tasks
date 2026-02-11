@@ -36,7 +36,11 @@ func main() {
 		log.Fatal(err)
 	}
 	if store != nil {
-		defer store.Close()
+		defer func() {
+			if err := store.Close(); err != nil {
+				log.Printf("failed to close store: %v", err)
+			}
+		}()
 		log.Println("Redis enabled")
 	} else {
 		log.Println("Redis disabled")
@@ -47,7 +51,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer storage.Master.Close()
+	defer func() {
+		if err := storage.Master.Close(); err != nil {
+			log.Printf("failed to close master storage: %v", err)
+		}
+	}()
 	log.Println("Postgres connected")
 
 	// Repository

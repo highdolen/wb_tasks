@@ -14,7 +14,7 @@ COPY . .
 # Собираем бинарник
 RUN go build -o shortener cmd/server/main.go
 
-# Второй слой для лёгкого контейнера 
+# Второй слой для лёгкого контейнера
 FROM alpine:3.18
 
 WORKDIR /app
