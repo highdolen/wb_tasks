@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"comment/internal/config"
 	"comment/internal/handlers"
@@ -27,7 +33,7 @@ func main() {
 	// Формирование адреса сервера
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 
-	// Создание новый экземпляр HTTP-сервера с режимом debug
+	// Создание нового экземпляра HTTP-сервера с режимом debug
 	r := ginext.New("debug")
 
 	//разрешаем запросы с любого источника
@@ -57,14 +63,39 @@ func main() {
 
 	// Создание хендлера, который связывает HTTP-запросы с сервисом
 	h := handlers.NewCommentHandler(svc)
-
-	// Регистрация маршрутов (POST, GET, DELETE)
+	// Регистрация запрос
 	h.Register(r)
 
-	log.Printf("Starting server at %s...", addr)
-
-	// Запускаем сервер на указанном адресе
-	if err := r.Run(addr); err != nil {
-		log.Fatalf("server failed: %v", err)
+	// оздаём свой http.Server
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	// Запускаем сервер в отдельной горутине
+	go func() {
+		log.Printf("Starting server at %s...", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// Канал для сигналов ОС
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Блокируемся до получения сигнала
+	<-quit
+	log.Println("Shutdown signal received...")
+
+	// Даём серверу 5 секунд на завершение запросов
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Запускаем graceful shutdown
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("server forced to shutdown: %v\n", err)
+	}
+
+	log.Println("server stopped gracefully")
 }
