@@ -2,7 +2,9 @@ package booking
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"log"
 
 	"eventBooker/internal/user"
 
@@ -23,7 +25,11 @@ func (r *BookingRepository) Create(ctx context.Context, eventID, userID int64, t
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("tx rollback error: %v", err)
+		}
+	}()
 
 	res, err := tx.ExecContext(ctx, `
 		UPDATE events
@@ -79,7 +85,11 @@ func (r *BookingRepository) CancelExpired(ctx context.Context) ([]user.User, err
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("tx rollback error: %v", err)
+		}
+	}()
 
 	rows, err := tx.QueryContext(ctx, `
 		UPDATE bookings b
@@ -93,7 +103,11 @@ func (r *BookingRepository) CancelExpired(ctx context.Context) ([]user.User, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows close error: %v", err)
+		}
+	}()
 
 	var users []user.User
 	var eventIDs []int64
@@ -157,7 +171,11 @@ func (r *BookingRepository) GetByUserID(ctx context.Context, userID int64) ([]Bo
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows close error: %v", err)
+		}
+	}()
 
 	var bookings []Booking
 	for rows.Next() {

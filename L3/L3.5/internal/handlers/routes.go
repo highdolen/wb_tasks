@@ -2,7 +2,7 @@ package handlers
 
 import "github.com/wb-go/wbf/ginext"
 
-//RegisterRoutes - регистрация маршрутов
+// RegisterRoutes - регистрация маршрутов
 func RegisterRoutes(engine *ginext.Engine, eventHandler *EventHandler, bookingHandler *BookingHandler, userHandler *UserHandler) {
 	// Группа для событий
 	api := engine.Group("/events")

@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/wb-go/wbf/dbpg"
@@ -57,7 +58,11 @@ func (r *PostgresRepository) GetAll(ctx context.Context) ([]*Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows close error: %v", err)
+		}
+	}()
 
 	var events []*Event
 

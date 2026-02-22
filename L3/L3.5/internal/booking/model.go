@@ -10,7 +10,7 @@ const (
 	StatusCanceled  Status = "canceled"
 )
 
-//Booking - структура бронирования
+// Booking - структура бронирования
 type Booking struct {
 	ID        int64
 	EventID   int64

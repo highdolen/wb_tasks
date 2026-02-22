@@ -51,7 +51,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("db connection error: %v", err)
 	}
-	defer db.Master.Close()
+	defer func() {
+		if err := db.Master.Close(); err != nil {
+			log.Printf("db close error: %v", err)
+		}
+	}()
 
 	// Репозитории
 	eventRepo := event.NewRepository(db)

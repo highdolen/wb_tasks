@@ -2,7 +2,7 @@ package event
 
 import "time"
 
-//Event - структура события
+// Event - структура события
 type Event struct {
 	ID             int64         `json:"id"`
 	Name           string        `json:"name"`

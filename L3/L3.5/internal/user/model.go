@@ -2,7 +2,7 @@ package user
 
 import "time"
 
-//User - структура пользователя
+// User - структура пользователя
 type User struct {
 	ID         int64
 	Email      string

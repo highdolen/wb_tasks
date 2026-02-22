@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -52,7 +53,11 @@ func (t *Telegram) Send(ctx context.Context, chatID string, message string) erro
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("resp body close error: %v", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("telegram send failed: %s", resp.Status)
