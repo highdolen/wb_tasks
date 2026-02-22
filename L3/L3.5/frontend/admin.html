@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Админ панель</h1>
+
+    <h2>Создать событие</h2>
+
+    <input id="eventName" placeholder="Название">
+    <input id="eventDate" type="datetime-local">
+    <input id="totalSeats" type="number" placeholder="Места">
+    <input id="bookingTTL" type="number" placeholder="TTL (минуты)">
+
+    <button id="createEventBtn">Создать событие</button>
+
+    <h2>События</h2>
+    <div id="events"></div>
+</div>
+
+<script src="/static/js/admin.js"></script>
+</body>
+</html>

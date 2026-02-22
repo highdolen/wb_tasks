@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Вход</h1>
+
+    <input type="text" id="name" placeholder="Имя">
+    <input type="email" id="email" placeholder="Email">
+    <input type="text" id="telegram" placeholder="Telegram ID">
+
+    <select id="role">
+        <option value="user">Пользователь</option>
+        <option value="admin">Админ</option>
+    </select>
+
+    <button onclick="login()">Войти</button>
+</div>
+
+<script src="/static/js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+/* Общие настройки */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+h1 {
+    color: #222;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+h2 {
+    color: #444;
+    font-size: 1.4em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Контейнер */
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Инпуты и кнопки */
+input, select {
+    width: calc(100% - 22px);
+    padding: 8px 10px;
+    margin: 5px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+button {
+    padding: 8px 16px;
+    margin: 5px 5px 15px 0;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Разделительные линии */
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* События */
+.event {
+    border-bottom: 1px solid #eee;
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.event button {
+    background-color: #008CBA;
+}
+
+.event button:hover {
+    background-color: #007bb5;
+}
+
+/* Уведомления и сообщения */
+.alert {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+.alert-success {
+    background-color: #4CAF50;
+}
+
+.alert-error {
+    background-color: #f44336;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    input, button {
+        width: 100%;
+        margin: 8px 0;
+    }
+
+    .event {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .event button {
+        margin-top: 10px;
+        width: 100%;
+    }
+}
