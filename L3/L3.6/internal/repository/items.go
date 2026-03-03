@@ -14,12 +14,12 @@ type ItemRepository struct {
 	db *dbpg.DB
 }
 
-// NewItemRepository - создает новый экземпляр репозитория
+// NewItemRepository создает новый экземпляр репозитория
 func NewItemRepository(db *dbpg.DB) *ItemRepository {
 	return &ItemRepository{db: db}
 }
 
-// Create - создает новую запись операции (income / expense) в базе данных
+// Create создает новую запись операции (income / expense)
 func (r *ItemRepository) Create(ctx context.Context, item *models.Item) (int64, error) {
 	query := `
 	INSERT INTO items (type, amount, category, created_at)
@@ -40,10 +40,8 @@ func (r *ItemRepository) Create(ctx context.Context, item *models.Item) (int64, 
 	return id, err
 }
 
-// GetAll - возвращает список операций с возможностью фильтрации
-// по типу, категории и диапазону дат
+// GetAll возвращает список операций с фильтрацией
 func (r *ItemRepository) GetAll(ctx context.Context, filter models.ItemFilter) ([]models.Item, error) {
-
 	query := `
 	SELECT id, type, amount, category, created_at
 	FROM items
@@ -74,7 +72,6 @@ func (r *ItemRepository) GetAll(ctx context.Context, filter models.ItemFilter) (
 	if filter.To != nil {
 		query += fmt.Sprintf(" AND created_at <= $%d", i)
 		args = append(args, *filter.To)
-		i++
 	}
 
 	query += " ORDER BY created_at DESC"
@@ -83,31 +80,36 @@ func (r *ItemRepository) GetAll(ctx context.Context, filter models.ItemFilter) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var items []models.Item
 
 	for rows.Next() {
 		var item models.Item
 
-		err := rows.Scan(
+		if err := rows.Scan(
 			&item.ID,
 			&item.Type,
 			&item.Amount,
 			&item.Category,
 			&item.CreatedAt,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
 
 		items = append(items, item)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return items, nil
 }
 
-// Update - обновляет существующую операцию по ID
+// Update обновляет операцию по ID
 func (r *ItemRepository) Update(ctx context.Context, id int64, item *models.Item) error {
 	query := `
 	UPDATE items
@@ -128,7 +130,7 @@ func (r *ItemRepository) Update(ctx context.Context, id int64, item *models.Item
 	return err
 }
 
-// Delete - удаляет операцию из базы данных по ID
+// Delete удаляет операцию по ID
 func (r *ItemRepository) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM items WHERE id=$1`
 	_, err := r.db.ExecContext(ctx, query, id)

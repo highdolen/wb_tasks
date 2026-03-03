@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 	"salesTracker/internal/models"
 	"time"
 )
@@ -50,7 +51,12 @@ func (r *ItemRepository) GetGroupedAnalytics(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// можно залогировать
+			log.Println("failed to close rows:", err)
+		}
+	}()
 
 	var result []models.GroupedAnalytics
 
