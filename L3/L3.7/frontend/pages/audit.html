@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Audit Logs</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+<h1>Audit Logs</h1>
+
+<div class="filter-box">
+
+<input id="user" placeholder="User">
+
+<select id="action">
+<option value="">All actions</option>
+<option value="INSERT">INSERT</option>
+<option value="UPDATE">UPDATE</option>
+<option value="DELETE">DELETE</option>
+</select>
+
+<input id="from" type="date">
+<input id="to" type="date">
+
+<button onclick="filterHistory()">Filter</button>
+<button onclick="goBack()">Back</button>
+
+</div>
+
+<br>
+
+<table border="1">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Item ID</th>
+<th>Action</th>
+<th>User</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody id="auditTable"></tbody>
+
+</table>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/audit.js"></script>
+
+</body>
+</html>

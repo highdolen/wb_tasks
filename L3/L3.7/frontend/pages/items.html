@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Items</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+<h1>Warehouse Items</h1>
+
+<div class="create-box" id="create-box">
+<input id="name" placeholder="Item Name">
+<input id="quantity" type="number" placeholder="Quantity">
+<button onclick="createItem()">Create</button>
+</div>
+
+<br>
+
+<button id="audit-btn" onclick="openAudit()">Audit Logs</button>
+<button onclick="exportCSV()">Export CSV</button>
+<button onclick="logout()">Logout</button>
+
+<br><br>
+
+<table border="1">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Quantity</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="itemsTable"></tbody>
+
+</table>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/components/table.js"></script>
+<script src="/static/js/items.js"></script>
+<script src="/static/js/history.js"></script>
+
+<script>
+function openAudit() {
+    window.location.href = "/pages/audit.html"
+}
+</script>
+
+</body>
+</html>
