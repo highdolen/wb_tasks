@@ -108,14 +108,19 @@ func runDistributed() {
 		result := ProcessLine(line, *fields, *delimiter, *separated)
 
 		// отправляем результат на сервер
-		fmt.Fprintln(writers[server], result)
+		if _, err := fmt.Fprintln(writers[server], result); err != nil {
+			return
+		}
 
 		i++
 	}
 
 	// очищаем буферы и отправляем данные
 	for _, w := range writers {
-		w.Flush()
+		if err := w.Flush(); err != nil {
+			fmt.Println("flush error:", err)
+			return
+		}
 	}
 }
 

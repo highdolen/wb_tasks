@@ -25,13 +25,20 @@ func StartServer(port string, fields string, delimiter string, separated bool) {
 
 // handleConnection обрабатывает каждое соединение с клиентом
 func handleConnection(conn net.Conn, fields string, delimiter string, separated bool) {
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Println("connection close error:", err)
+		}
+	}()
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		line := scanner.Text()
 		result := ProcessLine(line, fields, delimiter, separated)
 		if result != "" {
-			fmt.Fprintln(conn, result)
+			if _, err := fmt.Fprintln(conn, result); err != nil {
+				fmt.Println("send error:", err)
+				return
+			}
 		}
 	}
 }
