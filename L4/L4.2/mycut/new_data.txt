@@ -1,0 +1,4 @@
+name	age	city	job
+Petya	23	Moscow	Engineer
+Ivan	30	Kazan	Manager
+Katya	28	Krasnodar	Designer
