@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/highdolen/L0_optimize/internal/cache"
-	"github.com/highdolen/L0_optimize/internal/models"
+	"L0_optimize/internal/cache"
+	"L0_optimize/internal/models"
 )
 
 // cacheAdapter адаптирует существующий кеш к интерфейсу CacheService
